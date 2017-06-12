@@ -2,22 +2,30 @@ package com.udit.dodger;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
+
 import java.util.Random;
+
+import static com.udit.dodger.R.drawable.overlay;
+import static com.udit.dodger.R.drawable.resume;
 
 public class MainActivity extends Activity {
     int bgIndex;
@@ -29,9 +37,13 @@ public class MainActivity extends Activity {
     int warrior_Y;
     int winHeight;
     int winWidth;
-    static int score =0,count=0,lifeCount=5,colliding_enemy=-1;
+    int score =0,count=0,lifeCount=5,colliding_enemy=-1;
     static boolean flag=true;
     boolean gameThreadPaused;
+    private Rect r = new Rect();
+    boolean backButtonPressed = false;
+    long backPressedTime = 0;
+    boolean isGameOver = false;
 
     class MySurfaceView extends SurfaceView implements Runnable {
         Bitmap backgroundImage;
@@ -41,7 +53,8 @@ public class MainActivity extends Activity {
         Thread thread;
         Bitmap warrior;
         Bitmap life;
-        Bitmap resume,restart,menu,overlay;
+        Bitmap resume,restart,menu,overlay,gameOver,yourScore;
+        int gameOver_x,gameOver_y;
 
         public MySurfaceView(Context context) {
             super(context);
@@ -54,13 +67,16 @@ public class MainActivity extends Activity {
             this.resume = BitmapFactory.decodeResource(getResources(), R.drawable.resume);
             this.restart = BitmapFactory.decodeResource(getResources(), R.drawable.restart);
             this.menu = BitmapFactory.decodeResource(getResources(), R.drawable.menu);
-            this.overlay = BitmapFactory.decodeResource(getResources(), R.drawable.overlay);
-            this.overlay = getScaledImage(this.overlay,0.6f);
+            this.gameOver = BitmapFactory.decodeResource(getResources(),R.drawable.game_over);
+            this.yourScore = BitmapFactory.decodeResource(getResources(),R.drawable.your_score);
+            this.overlay = getScaledImage(BitmapFactory.decodeResource(getResources(), R.drawable.overlay),0.6f);
 
             MainActivity.this.warrior_Y = (MainActivity.this.winHeight / 2) - (this.warrior.getHeight() / 2);
             initShips();
             this.backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.image2);
             this.backgroundImage = getScaledImage(this.backgroundImage);
+            gameOver_x = (winWidth-gameOver.getWidth())/2;
+            gameOver_y = 0;
         }
 
         public void onResumeMySurfaceView() {
@@ -84,18 +100,88 @@ public class MainActivity extends Activity {
 
         public void run() {
             while (this.running) {
-                Log.d("hereiam------------",""+gameThreadPaused);
                 if (this.surfaceHolder.getSurface().isValid()) {
                     this.canvas = this.surfaceHolder.lockCanvas();
                     createBackGround();
                     moveEnemyShip();
                     showLife();
                     showScore();
-                    drawOverlay();
                     drawMenu();
+                    drawGameOverMenu();
                     this.surfaceHolder.unlockCanvasAndPost(this.canvas);
                 }
             }
+        }
+
+        public void drawGameOverMenu(){
+            if(isGameOver){
+                Paint paint = new Paint();
+                if(gameOver_y<(winHeight-gameOver.getHeight())/2-50) {
+                    gameOver_y=gameOver_y+3;
+                    this.canvas.drawBitmap(this.gameOver, gameOver_x, gameOver_y , paint);
+                }
+                else{
+                    this.canvas.drawBitmap(this.gameOver, gameOver_x, gameOver_y , paint);
+                    drawYourScore();
+                    drawGameEndMenu();
+                }
+
+            }else
+                return;
+        }
+
+        public void drawGameEndMenu(){
+            int offset = overlay.getWidth()/2;
+            int initialX = (winWidth-overlay.getWidth())/2-restart.getWidth()/2;
+            int x1 = initialX+offset/2;
+            int x2 = x1+offset;
+            int left,top,right,bottom;
+
+            left = (winWidth-overlay.getWidth())/2;
+            top = (winHeight-overlay.getHeight())/2;
+            right = left+overlay.getWidth()/2;
+            bottom = top+overlay.getHeight();
+
+            int textY = bottom;
+            int y = textY-(int)(restart.getHeight()*1.5);
+
+            Paint paint = new Paint();
+            paint.setColor(-1);
+            paint.setStrokeWidth(2.0f);
+            paint.setTextSize(25.0f);
+            paint.setTextAlign(Paint.Align.LEFT);
+
+            r.set(left,top,right,bottom);
+            this.canvas.getClipBounds(r);
+
+            String Restart = "Restart";
+            String Menu = "Menu";
+
+            paint.getTextBounds(Restart, 0, Restart.length(), r);
+            this.canvas.drawBitmap(this.restart,x1,y, paint);
+            this.canvas.drawBitmap(this.menu,x2,y, paint);
+
+            this.canvas.drawText(Restart, x1-r.width()/2+restart.getWidth()/2, textY, paint);
+            left=left+winWidth/2;
+            paint.getTextBounds(Menu, 0, Menu.length(), r);
+            this.canvas.drawText(Menu, x2-r.width()/2+restart.getWidth()/2, textY, paint);
+        }
+
+        public void drawYourScore(){
+            int initialX = (winWidth-mySurfaceView.overlay.getWidth())/2-mySurfaceView.resume.getWidth()/2;
+            int offset = mySurfaceView.overlay.getWidth()/2;
+            int x1 = initialX+offset/2;
+
+            Paint paint = new Paint();
+            this.canvas.drawBitmap(this.yourScore,x1,(winHeight-gameOver.getHeight())/2 +80, paint);
+
+            int score_x = x1+yourScore.getWidth()+40;
+            int score_y = (winHeight+gameOver.getHeight())/2-40;
+            paint.setColor(Color.parseColor("#71D57D"));
+            paint.setStrokeWidth(2.0f);
+            paint.setTextSize(40.0f);
+            paint.setTextAlign(Paint.Align.RIGHT);
+            this.canvas.drawText("  "+score,score_x,score_y, paint);
         }
 
         public void drawOverlay(){
@@ -108,19 +194,55 @@ public class MainActivity extends Activity {
         public void drawMenu(){
             if(!gameThreadPaused)
                 return;
-            int y = (winHeight)/2-resume.getHeight()/2;
+            int y = (winHeight)-(resume.getHeight()*2);
+            int textY = winHeight-5;
             int offset = overlay.getWidth()/3;
-            int initialX = (winWidth-overlay.getWidth())/2-resume.getHeight()/2;
+            int initialX = (winWidth-overlay.getWidth())/2-resume.getWidth()/2;
             int x1 = initialX+offset/2;
             int x2 = x1+offset;
             int x3 = x2+offset;
 
+
+            int left,top,right,bottom;
+
+            left = (winWidth-overlay.getWidth())/2;
+            top = (winHeight-overlay.getHeight())/2;
+            right = left+overlay.getWidth()/3;
+            bottom = top+overlay.getHeight();
+
+
             Paint paint = new Paint();
+            paint.setColor(-1);
+            paint.setStrokeWidth(2.0f);
+            paint.setTextSize(25.0f);
+            paint.setTextAlign(Paint.Align.LEFT);
+
+            r.set(left,top,right,bottom);
+            this.canvas.getClipBounds(r);
+
+            String Resume = "Resume";
+            String Restart = "Restart";
+            String Menu = "Menu";
+
+            paint.getTextBounds(Resume, 0, Resume.length(), r);
             this.canvas.drawBitmap(this.resume,x1,y, paint);
             this.canvas.drawBitmap(this.restart,x2,y, paint);
             this.canvas.drawBitmap(this.menu,x3,y, paint);
+
+            this.canvas.drawText(Resume, x1-r.width()/2+resume.getWidth()/2, textY, paint);
+            left=left+winWidth/3;
+            paint.getTextBounds(Restart, 0, Restart.length(), r);
+            this.canvas.drawText(Restart, x2-r.width()/2+restart.getWidth()/2, textY, paint);
+
+            left=left+winWidth/3;
+            paint.getTextBounds(Menu, 0, Menu.length(), r);
+            this.canvas.drawText(Menu, x3-r.width()/2+menu.getWidth()/2, textY, paint);
+
         }
+
         public void showLife(){
+            if(isGameOver)
+                return;
             for(int i=0;i<lifeCount;i++){
                 int x = 20+i*30;
                 this.canvas.drawBitmap(this.life,(float)x,25.0f, new Paint());
@@ -128,6 +250,8 @@ public class MainActivity extends Activity {
         }
 
         public void showScore(){
+            if(isGameOver)
+                return;
             Paint paint = new Paint();
             paint.setColor(-1);
             paint.setStrokeWidth(2.0f);
@@ -146,7 +270,7 @@ public class MainActivity extends Activity {
         }
         public void createBackGround() {
             int imageWidth = Math.round((float) this.backgroundImage.getWidth());
-            if (gameThreadPaused) {
+            if (gameThreadPaused || isGameOver) {
                 this.canvas.drawBitmap(this.backgroundImage, (float) MainActivity.this.bgIndex, 0.0f, new Paint());
                 this.canvas.drawBitmap(this.backgroundImage, (float) (MainActivity.this.bgIndex - imageWidth), 0.0f, new Paint());
             } else {
@@ -160,7 +284,9 @@ public class MainActivity extends Activity {
         }
 
         public void moveEnemyShip() {
-            if(gameThreadPaused){
+            if(isGameOver){
+            }
+            else if(gameThreadPaused){
                 try {
                     this.thread.sleep(300);
                 } catch (InterruptedException e) {
@@ -247,6 +373,9 @@ public class MainActivity extends Activity {
                     }
                 }
                 i++;
+                if(lifeCount == 0){
+                    isGameOver = true;
+                }
             }}
         }
 
@@ -367,8 +496,39 @@ public class MainActivity extends Activity {
 
     protected void onPause() {
         super.onPause();
-        gameThreadPaused = true;
+        if(!isGameOver) {
+            gameThreadPaused = true;
+        }
         this.mySurfaceView.onPauseMySurfaceView();
+    }
+
+    @Override
+    public void onBackPressed(){
+        if(gameThreadPaused || isGameOver) {
+            if(backButtonPressed){
+                long doublePressedTime = System.currentTimeMillis();
+                if((doublePressedTime-backPressedTime)/1000 <=4){
+                    super.finish();
+                }
+                else{
+                    backButtonPressed = false;
+                    backPressedTime = 0;
+                    Toast toast = Toast.makeText(getApplicationContext(), "Press again to close dodger", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.BOTTOM , 0, 0);
+                    toast.show();
+                }
+            }else {
+                Toast toast = Toast.makeText(getApplicationContext(), "Press again to close dodger", Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.BOTTOM , 0, 0);
+                toast.show();
+            }
+            backButtonPressed = true;
+            backPressedTime = System.currentTimeMillis();
+            return;
+        }
+        else {
+            gameThreadPaused = true;
+        }
     }
 
     public void initWindow() {
@@ -379,13 +539,79 @@ public class MainActivity extends Activity {
         this.winHeight = size.y;
     }
 
-    public void moveWarrior(int x, int y) {
-        if (y > (this.winHeight / 2)) {
-            if (x < 200 && this.warrior_Y < this.winHeight - 100) {
-                this.warrior_Y += 30;
+    public void pauseOnTouchEvent(int x,int y){
+        int width = mySurfaceView.resume.getWidth();
+        int yIdx = (winHeight)-(mySurfaceView.resume.getHeight()*2);
+        int offset = mySurfaceView.overlay.getWidth()/3;
+        int initialX = (winWidth-mySurfaceView.overlay.getWidth())/2-mySurfaceView.resume.getWidth()/2;
+        int x1 = initialX+offset/2;
+        int x2 = x1+offset;
+        int x3 = x2+offset;
+
+        if(y>=yIdx){
+            if(x>=x1&&x<=x1+width){
+                gameThreadPaused = false;
             }
-            if (x > this.winWidth - 200 && this.warrior_Y > 55) {
-                this.warrior_Y -= 30;
+            else if(x>=x2&&x<=x2+width){
+                score =0;count=0;lifeCount=5;colliding_enemy=-1;
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
+            }
+            else if(x>=x3&&x<=x3+width){
+                score =0;count=0;lifeCount=5;colliding_enemy=-1;
+                Intent mainIntent = new Intent(this, Main2Activity.class);
+                startActivity(mainIntent);
+                finish();
+            }
+            else{
+
+            }
+        }
+    }
+
+    public void menuClickOnGameOver(int x,int y){
+        int width = mySurfaceView.resume.getWidth();
+        int offset = mySurfaceView.overlay.getWidth()/2;
+        int yIdx = (winHeight-mySurfaceView.overlay.getHeight())/2+mySurfaceView.overlay.getHeight()-(int)(mySurfaceView.restart.getHeight()*1.5);
+        int initialX = (winWidth-mySurfaceView.overlay.getWidth())/2-mySurfaceView.resume.getWidth()/2;
+        int x1 = initialX+offset/2;
+        int x2 = x1+offset;
+
+        if(y>=yIdx){
+            if(x>=x1&&x<=x1+width){
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
+            }
+            else if(x>=x2&&x<=x2+width){
+                Intent mainIntent = new Intent(this, Main2Activity.class);
+                startActivity(mainIntent);
+                finish();
+            }
+            else{
+
+            }
+        }
+    }
+
+    public void performTouchEvents(int x, int y,boolean gameThreadPaused) {
+        if (gameThreadPaused) {
+            pauseOnTouchEvent(x,y);
+        }
+        else if(isGameOver){
+            menuClickOnGameOver(x,y);
+        }
+        else {
+            if(!isGameOver) {
+                if (y > (this.winHeight / 2)) {
+                    if (x < 200 && this.warrior_Y < this.winHeight - 100) {
+                        this.warrior_Y += 30;
+                    }
+                    if (x > this.winWidth - 200 && this.warrior_Y > 55) {
+                        this.warrior_Y -= 30;
+                    }
+                }
             }
         }
     }
@@ -393,7 +619,7 @@ public class MainActivity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
             case ItemTouchHelper.UP /*1*/:
-                moveWarrior((int)event.getX(), (int)event.getY());
+                performTouchEvents((int)event.getX(), (int)event.getY(),gameThreadPaused);
                 break;
         }
         return super.onTouchEvent(event);
