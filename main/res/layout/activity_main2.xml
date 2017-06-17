@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:weightSum="4">
+        android:weightSum="3">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,7 +38,7 @@
             android:gravity="center">
 
             <Button
-                android:id="@+id/play1"
+                android:id="@+id/score"
                 android:layout_width="150dip"
                 android:layout_height="40dip"
                 android:text="High Score"
@@ -52,20 +52,12 @@
             android:layout_weight="1"
             android:gravity="center">
             <Button
-                android:id="@+id/play2"
+                android:id="@+id/tutorial"
                 android:layout_width="150dip"
                 android:layout_height="40dip"
                 android:text="Tutorial"
                 android:background="@android:color/white"
                 android:textColor="@android:color/holo_red_dark"/>
-        </LinearLayout>
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center">
         </LinearLayout>
 
     </LinearLayout>

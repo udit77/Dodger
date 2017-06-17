@@ -35,10 +35,18 @@ public class Main2Activity extends Activity {
 
 
         Button play = (Button)findViewById(R.id.play);
+        Button score = (Button)findViewById(R.id.score);
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startGame();
+            }
+        });
+
+        score.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showScores();
             }
         });
     }
@@ -48,6 +56,13 @@ public class Main2Activity extends Activity {
         startActivity(intent);
         finish();
     }
+
+    public void showScores() {
+        Intent intent = new Intent(this,scores.class);
+        startActivity(intent);
+        finish();
+    }
+
 
     @Override
     public void onBackPressed(){

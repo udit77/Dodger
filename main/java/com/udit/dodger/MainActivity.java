@@ -22,6 +22,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import static com.udit.dodger.R.drawable.overlay;
@@ -44,6 +45,8 @@ public class MainActivity extends Activity {
     boolean backButtonPressed = false;
     long backPressedTime = 0;
     boolean isGameOver = false;
+    HighScore highScore = new HighScore();
+    SharedPreference preference = new SharedPreference();
 
     class MySurfaceView extends SurfaceView implements Runnable {
         Bitmap backgroundImage;
@@ -175,7 +178,7 @@ public class MainActivity extends Activity {
             Paint paint = new Paint();
             this.canvas.drawBitmap(this.yourScore,x1,(winHeight-gameOver.getHeight())/2 +80, paint);
 
-            int score_x = x1+yourScore.getWidth()+40;
+            int score_x = x1+yourScore.getWidth()+60;
             int score_y = (winHeight+gameOver.getHeight())/2-40;
             paint.setColor(Color.parseColor("#71D57D"));
             paint.setStrokeWidth(2.0f);
@@ -374,6 +377,11 @@ public class MainActivity extends Activity {
                 }
                 i++;
                 if(lifeCount == 0){
+                    if(!isGameOver) {
+                        highScore.setTime(System.currentTimeMillis());
+                        highScore.setScore(score);
+                        preference.addScore(this.getContext(), highScore);
+                    }
                     isGameOver = true;
                 }
             }}
