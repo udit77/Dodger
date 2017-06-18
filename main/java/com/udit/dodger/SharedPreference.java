@@ -6,7 +6,6 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +27,7 @@ public class SharedPreference {
         super();
     }
 
-    public void saveScores(Context context, List<HighScore> score) {
+    public void saveScores(Context context, List<HighScores> score) {
         SharedPreferences scoresPref;
         SharedPreferences.Editor editor;
         scoresPref = context.getSharedPreferences(PREFS_NAME,
@@ -50,19 +49,19 @@ public class SharedPreference {
         editor.commit();
     }
 
-    public void addScore(Context context, HighScore highScore) {
-        List<HighScore> scores = getScores(context);
+    public void addScore(Context context, HighScores highScores) {
+        List<HighScores> scores = getScores(context);
         if (scores == null)
-            scores = new ArrayList<HighScore>();
+            scores = new ArrayList<HighScores>();
         if(scores.size()<11) {
-            scores.add(highScore);
+            scores.add(highScores);
             saveScores(context, scores);
         }
     }
 
-    public ArrayList<HighScore> getScores(Context context) {
+    public ArrayList<HighScores> getScores(Context context) {
         SharedPreferences settings;
-        List<HighScore> scores;
+        List<HighScores> scores;
 
         settings = context.getSharedPreferences(PREFS_NAME,
                 MODE_PRIVATE);
@@ -70,21 +69,21 @@ public class SharedPreference {
         if (settings.contains(SCORES)) {
             String jsonScores = settings.getString(SCORES, null);
             Gson gson = new Gson();
-            HighScore[] highScores = gson.fromJson(jsonScores,
-                    HighScore[].class);
+            HighScores[] highScores = gson.fromJson(jsonScores,
+                    HighScores[].class);
 
             scores = Arrays.asList(highScores);
-            scores = new ArrayList<HighScore>(scores);
+            scores = new ArrayList<HighScores>(scores);
         } else {
             return null;
         }
-        return (ArrayList<HighScore>) scores;
+        return (ArrayList<HighScores>) scores;
     }
 
-    class MyComparator1 implements Comparator<HighScore> {
+    class MyComparator1 implements Comparator<HighScores> {
         @Override
-        public int compare(HighScore highScore, HighScore t1) {
-            return compareValue(highScore.getScore(),t1.getScore());
+        public int compare(HighScores highScores, HighScores t1) {
+            return compareValue(highScores.getScore(),t1.getScore());
         }
 
         public int compareValue(int x, int y) {
@@ -94,14 +93,14 @@ public class SharedPreference {
         }
     }
 
-    class MyComparator2 implements Comparator<HighScore> {
+    class MyComparator2 implements Comparator<HighScores> {
         @Override
-        public int compare(HighScore highScore, HighScore t1) {
-            return compareValue(highScore, t1);
+        public int compare(HighScores highScores, HighScores t1) {
+            return compareValue(highScores, t1);
         }
 
-        public int compareValue(HighScore highScore,HighScore t1) {
-            return highScore.getScore() == t1.getScore() ? (highScore.getTime()<t1.getTime() ? -1 : highScore.getTime()>t1.getScore() ? 1 : 0): 0;
+        public int compareValue(HighScores highScores, HighScores t1) {
+            return highScores.getScore() == t1.getScore() ? (highScores.getTime()<t1.getTime() ? -1 : highScores.getTime()>t1.getScore() ? 1 : 0): 0;
         }
     }
 }

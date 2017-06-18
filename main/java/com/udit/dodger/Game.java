@@ -3,6 +3,7 @@ package com.udit.dodger;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -10,6 +11,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
@@ -20,21 +23,19 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Random;
 
-import static com.udit.dodger.R.drawable.overlay;
-import static com.udit.dodger.R.drawable.resume;
-
-public class MainActivity extends Activity {
+public class Game extends Activity{
     int bgIndex;
     EnemyShips[] enemyShips;
     int fireGap;
     int initialFireIndex;
     MySurfaceView mySurfaceView;
-    Vibrator v;
     int warrior_Y;
     int winHeight;
     int winWidth;
@@ -45,8 +46,9 @@ public class MainActivity extends Activity {
     boolean backButtonPressed = false;
     long backPressedTime = 0;
     boolean isGameOver = false;
-    HighScore highScore = new HighScore();
+    HighScores highScores = new HighScores();
     SharedPreference preference = new SharedPreference();
+    MediaPlayer player;
 
     class MySurfaceView extends SurfaceView implements Runnable {
         Bitmap backgroundImage;
@@ -64,7 +66,7 @@ public class MainActivity extends Activity {
             this.thread = null;
             this.running = false;
             this.surfaceHolder = getHolder();
-            MainActivity.this.initWindow();
+            Game.this.initWindow();
             this.warrior = BitmapFactory.decodeResource(getResources(), R.drawable.warrior);
             this.life = BitmapFactory.decodeResource(getResources(), R.drawable.life);
             this.resume = BitmapFactory.decodeResource(getResources(), R.drawable.resume);
@@ -74,7 +76,7 @@ public class MainActivity extends Activity {
             this.yourScore = BitmapFactory.decodeResource(getResources(),R.drawable.your_score);
             this.overlay = getScaledImage(BitmapFactory.decodeResource(getResources(), R.drawable.overlay),0.6f);
 
-            MainActivity.this.warrior_Y = (MainActivity.this.winHeight / 2) - (this.warrior.getHeight() / 2);
+            Game.this.warrior_Y = (Game.this.winHeight / 2) - (this.warrior.getHeight() / 2);
             initShips();
             this.backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.image2);
             this.backgroundImage = getScaledImage(this.backgroundImage);
@@ -86,9 +88,20 @@ public class MainActivity extends Activity {
             this.running = true;
             this.thread = new Thread(this);
             this.thread.start();
+            if(isGameOver){
+                if(!player.isPlaying()) {
+                    player = MediaPlayer.create(getApplicationContext(),R.raw.background);
+                    player.setLooping(true);
+                    player.setVolume(50.0f, 50.0f);
+                    player.start();
+                }
+            }
         }
 
         public void onPauseMySurfaceView() {
+            if(player.isPlaying()){
+                player.stop();
+            }
             boolean retry = true;
             this.running = false;
             while (retry) {
@@ -274,15 +287,15 @@ public class MainActivity extends Activity {
         public void createBackGround() {
             int imageWidth = Math.round((float) this.backgroundImage.getWidth());
             if (gameThreadPaused || isGameOver) {
-                this.canvas.drawBitmap(this.backgroundImage, (float) MainActivity.this.bgIndex, 0.0f, new Paint());
-                this.canvas.drawBitmap(this.backgroundImage, (float) (MainActivity.this.bgIndex - imageWidth), 0.0f, new Paint());
+                this.canvas.drawBitmap(this.backgroundImage, (float) Game.this.bgIndex, 0.0f, new Paint());
+                this.canvas.drawBitmap(this.backgroundImage, (float) (Game.this.bgIndex - imageWidth), 0.0f, new Paint());
             } else {
-                MainActivity.this.bgIndex++;
-                if (MainActivity.this.bgIndex > imageWidth) {
-                    MainActivity.this.bgIndex = 0;
+                Game.this.bgIndex++;
+                if (Game.this.bgIndex > imageWidth) {
+                    Game.this.bgIndex = 0;
                 }
-                this.canvas.drawBitmap(this.backgroundImage, (float) MainActivity.this.bgIndex, 0.0f, new Paint());
-                this.canvas.drawBitmap(this.backgroundImage, (float) (MainActivity.this.bgIndex - imageWidth), 0.0f, new Paint());
+                this.canvas.drawBitmap(this.backgroundImage, (float) Game.this.bgIndex, 0.0f, new Paint());
+                this.canvas.drawBitmap(this.backgroundImage, (float) (Game.this.bgIndex - imageWidth), 0.0f, new Paint());
             }
         }
 
@@ -296,39 +309,39 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
                 int i=0;
-                while (i < MainActivity.this.enemyShips.length) {
-                    this.canvas.drawBitmap(MainActivity.this.enemyShips[i].ship, MainActivity.this.enemyShips[i].getIdxX(), MainActivity.this.enemyShips[i].getIdxY(), new Paint());
+                while (i < Game.this.enemyShips.length) {
+                    this.canvas.drawBitmap(Game.this.enemyShips[i].ship, Game.this.enemyShips[i].getIdxX(), Game.this.enemyShips[i].getIdxY(), new Paint());
                     i++;
                 }
             }
             else{
             int i=0;
-            while (i < MainActivity.this.enemyShips.length) {
+            while (i < Game.this.enemyShips.length) {
                 if (i != 0) {
-                    MainActivity.this.enemyShips[i].idxX -= 6;
-                    if (MainActivity.this.enemyShips[i].getIdxX()< (MainActivity.this.enemyShips[i].ship.getWidth() * -1) + 5) {
+                    Game.this.enemyShips[i].idxX -= 6;
+                    if (Game.this.enemyShips[i].getIdxX()< (Game.this.enemyShips[i].ship.getWidth() * -1) + 5) {
                         int nxtIdx = i == 1 ? 6 : i - 1;
                         if (i == 5) {
                             increaseScore(2);
-                            MainActivity.this.enemyShips[i].setIdxX(MainActivity.this.enemyShips[i - 1].getIdxX());
-                            MainActivity.this.enemyShips[i].setIdxY(MainActivity.this.enemyShips[i - 1].getIdxY());
+                            Game.this.enemyShips[i].setIdxX(Game.this.enemyShips[i - 1].getIdxX());
+                            Game.this.enemyShips[i].setIdxY(Game.this.enemyShips[i - 1].getIdxY());
                         } else {
-                            MainActivity.this.enemyShips[i].setIdxX(MainActivity.this.enemyShips[nxtIdx].getIdxX() + (MainActivity.this.winWidth / 2));
+                            Game.this.enemyShips[i].setIdxX(Game.this.enemyShips[nxtIdx].getIdxX() + (Game.this.winWidth / 2));
                             if (i == 4) {
                                 increaseScore(4);
-                                MainActivity.this.enemyShips[i].setIdxY(MainActivity.this.getRandom(100, MainActivity.this.winHeight - 100));
-                                MainActivity.this.initialFireIndex = MainActivity.this.enemyShips[i].getIdxY();
+                                Game.this.enemyShips[i].setIdxY(Game.this.getRandom(100, Game.this.winHeight - 100));
+                                Game.this.initialFireIndex = Game.this.enemyShips[i].getIdxY();
                                 setFireGap();
                             } else {
-                                MainActivity.this.enemyShips[i].setIdxY(MainActivity.this.getRandom(55, MainActivity.this.winHeight - this.warrior.getHeight()));
+                                Game.this.enemyShips[i].setIdxY(Game.this.getRandom(55, Game.this.winHeight - this.warrior.getHeight()));
                             }
                         }
                     }
-                    if (MainActivity.this.enemyShips[i].getIdxX()> MainActivity.this.winWidth / 3 && MainActivity.this.enemyShips[i].getIdxX() < MainActivity.this.winWidth - 30 && MainActivity.this.enemyShips[i].type == "Enemy_follow") {
-                        MainActivity.this.enemyShips[i].setIdxY(MainActivity.this.warrior_Y);
+                    if (Game.this.enemyShips[i].getIdxX()> Game.this.winWidth / 3 && Game.this.enemyShips[i].getIdxX() < Game.this.winWidth - 30 && Game.this.enemyShips[i].type == "Enemy_follow") {
+                        Game.this.enemyShips[i].setIdxY(Game.this.warrior_Y);
                     }
-                    if (MainActivity.this.enemyShips[i].getIdxX() > MainActivity.this.winWidth / 3 && (i == 4 || i == 5)) {
-                        MainActivity.this.enemyShips[i] = motionOfFires(MainActivity.this.enemyShips[i]);
+                    if (Game.this.enemyShips[i].getIdxX() > Game.this.winWidth / 3 && (i == 4 || i == 5)) {
+                        Game.this.enemyShips[i] = motionOfFires(Game.this.enemyShips[i]);
                     }
 
                     int warrior_x = enemyShips[0].getIdxX();
@@ -348,7 +361,6 @@ public class MainActivity extends Activity {
 
                                 if (colliding_enemy != i) {
                                     lifeCount = lifeCount - 1;
-                                    v.vibrate(80);
                                 }
                                 flag = false;
                                 colliding_enemy = i;
@@ -360,17 +372,16 @@ public class MainActivity extends Activity {
 
                                 if (colliding_enemy != i) {
                                     lifeCount = lifeCount - 1;
-                                    v.vibrate(80);
                                 }
                                 flag = false;
                                 colliding_enemy = i;
                             }
                         }
                     }
-                    this.canvas.drawBitmap(MainActivity.this.enemyShips[i].ship, MainActivity.this.enemyShips[i].getIdxX(), MainActivity.this.enemyShips[i].getIdxY(), new Paint());
+                    this.canvas.drawBitmap(Game.this.enemyShips[i].ship, Game.this.enemyShips[i].getIdxX(), Game.this.enemyShips[i].getIdxY(), new Paint());
                 } else {
                     if (flag) {
-                        this.canvas.drawBitmap(MainActivity.this.enemyShips[i].ship, 0, MainActivity.this.warrior_Y, new Paint());
+                        this.canvas.drawBitmap(Game.this.enemyShips[i].ship, 0, Game.this.warrior_Y, new Paint());
                     } else {
                         flag = true;
                     }
@@ -378,9 +389,9 @@ public class MainActivity extends Activity {
                 i++;
                 if(lifeCount == 0){
                     if(!isGameOver) {
-                        highScore.setTime(System.currentTimeMillis());
-                        highScore.setScore(score);
-                        preference.addScore(this.getContext(), highScore);
+                        highScores.setTime(System.currentTimeMillis());
+                        highScores.setScore(score);
+                        preference.addScore(this.getContext(), highScores);
                     }
                     isGameOver = true;
                 }
@@ -403,28 +414,28 @@ public class MainActivity extends Activity {
         }
 
         public float getScale(Bitmap image) {
-            return ((float) image.getHeight()) / ((float) MainActivity.this.winHeight);
+            return ((float) image.getHeight()) / ((float) Game.this.winHeight);
         }
 
         public void initShips() {
-            int idxX = MainActivity.this.winWidth;
-            for (int i = 0; i < MainActivity.this.enemyShips.length; i++) {
+            int idxX = Game.this.winWidth;
+            for (int i = 0; i < Game.this.enemyShips.length; i++) {
                 String type = getShipType(i);
                 Bitmap ship = getShipBitmap(type);
                 if (i == 0) {
-                    MainActivity.this.enemyShips[i] = new EnemyShips(ship, 0, MainActivity.this.warrior_Y, 0, type);
+                    Game.this.enemyShips[i] = new EnemyShips(ship, 0, Game.this.warrior_Y, 0, type);
                 } else if (i == 5) {
-                    MainActivity.this.enemyShips[i] = new EnemyShips(ship, MainActivity.this.enemyShips[i - 1].idxX, MainActivity.this.enemyShips[i - 1].idxY, 5, type);
+                    Game.this.enemyShips[i] = new EnemyShips(ship, Game.this.enemyShips[i - 1].idxX, Game.this.enemyShips[i - 1].idxY, 5, type);
                 } else {
                     int idxY;
                     if (i == 4) {
-                        idxY = MainActivity.this.getRandom(100, MainActivity.this.winHeight - 100);
-                        MainActivity.this.initialFireIndex = idxY;
+                        idxY = Game.this.getRandom(100, Game.this.winHeight - 100);
+                        Game.this.initialFireIndex = idxY;
                         setFireGap();
                     } else {
-                        idxY = MainActivity.this.getRandom(55, MainActivity.this.winHeight - this.warrior.getHeight());
+                        idxY = Game.this.getRandom(55, Game.this.winHeight - this.warrior.getHeight());
                     }
-                    MainActivity.this.enemyShips[i] = new EnemyShips(ship, idxX + ((i - 1) * (MainActivity.this.winWidth / 2)), idxY, 5, type);
+                    Game.this.enemyShips[i] = new EnemyShips(ship, idxX + ((i - 1) * (Game.this.winWidth / 2)), idxY, 5, type);
                 }
             }
         }
@@ -456,22 +467,22 @@ public class MainActivity extends Activity {
         }
 
         public void setFireGap() {
-            if (MainActivity.this.initialFireIndex <= MainActivity.this.winHeight / 2) {
-                MainActivity.this.fireGap = MainActivity.this.getRandom(100, MainActivity.this.initialFireIndex);
+            if (Game.this.initialFireIndex <= Game.this.winHeight / 2) {
+                Game.this.fireGap = Game.this.getRandom(100, Game.this.initialFireIndex);
             }
-            if (MainActivity.this.initialFireIndex > MainActivity.this.winHeight / 2) {
-                MainActivity.this.fireGap = MainActivity.this.getRandom(100, MainActivity.this.winHeight - MainActivity.this.initialFireIndex);
+            if (Game.this.initialFireIndex > Game.this.winHeight / 2) {
+                Game.this.fireGap = Game.this.getRandom(100, Game.this.winHeight - Game.this.initialFireIndex);
             }
         }
 
         public EnemyShips motionOfFires(EnemyShips enemyShips) {
-            if (enemyShips.getIdxX() <= MainActivity.this.winWidth / 2) {
+            if (enemyShips.getIdxX() <= Game.this.winWidth / 2) {
                 if (enemyShips.type.equals("Enemy_fire_up")) {
-                    if (enemyShips.getIdxY() > MainActivity.this.initialFireIndex - MainActivity.this.fireGap) {
+                    if (enemyShips.getIdxY() > Game.this.initialFireIndex - Game.this.fireGap) {
                         enemyShips.idxY -= 3;
                         enemyShips.setIdxY(enemyShips.idxY);
                     }
-                } else if (enemyShips.getIdxY() < MainActivity.this.fireGap + MainActivity.this.initialFireIndex) {
+                } else if (enemyShips.getIdxY() < Game.this.fireGap + Game.this.initialFireIndex) {
                     enemyShips.idxY += 3;
                     enemyShips.setIdxY(enemyShips.idxY);
                 }
@@ -480,7 +491,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    public MainActivity() {
+    public Game() {
         this.bgIndex = 0;
         this.warrior_Y = 0;
         this.initialFireIndex = 0;
@@ -491,10 +502,16 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.mySurfaceView = new MySurfaceView(this);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setFlags(AccessibilityNodeInfoCompat.ACTION_NEXT_HTML_ELEMENT, AccessibilityNodeInfoCompat.ACTION_NEXT_HTML_ELEMENT);
         setContentView(this.mySurfaceView);
-        v = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
-        gameThreadPaused = false;
+        gameThreadPaused = false;;
+
+        player = MediaPlayer.create(getApplicationContext(),R.raw.background);
+        player.setLooping(true);
+        player.setVolume(50.0f,50.0f);
+        player.start();
     }
 
     protected void onResume() {
@@ -536,6 +553,8 @@ public class MainActivity extends Activity {
         }
         else {
             gameThreadPaused = true;
+            if(player.isPlaying())
+                player.stop();
         }
     }
 
@@ -559,18 +578,32 @@ public class MainActivity extends Activity {
         if(y>=yIdx){
             if(x>=x1&&x<=x1+width){
                 gameThreadPaused = false;
+                if(!player.isPlaying()){
+                    player = MediaPlayer.create(getApplicationContext(),R.raw.background);
+                    player.setLooping(true);
+                    player.setVolume(50.0f,50.0f);
+                    player.start();
+                }
             }
             else if(x>=x2&&x<=x2+width){
                 score =0;count=0;lifeCount=5;colliding_enemy=-1;
-                Intent mainIntent = new Intent(this, MainActivity.class);
+                Intent mainIntent = new Intent(this, Game.class);
                 startActivity(mainIntent);
                 finish();
+                if(player.isPlaying()) {
+                    player.stop();
+                    player.release();
+                }
             }
             else if(x>=x3&&x<=x3+width){
                 score =0;count=0;lifeCount=5;colliding_enemy=-1;
-                Intent mainIntent = new Intent(this, Main2Activity.class);
+                Intent mainIntent = new Intent(this, Home.class);
                 startActivity(mainIntent);
                 finish();
+                if(player.isPlaying()) {
+                    player.stop();
+                    player.release();
+                }
             }
             else{
 
@@ -588,12 +621,12 @@ public class MainActivity extends Activity {
 
         if(y>=yIdx){
             if(x>=x1&&x<=x1+width){
-                Intent mainIntent = new Intent(this, MainActivity.class);
+                Intent mainIntent = new Intent(this, Game.class);
                 startActivity(mainIntent);
                 finish();
             }
             else if(x>=x2&&x<=x2+width){
-                Intent mainIntent = new Intent(this, Main2Activity.class);
+                Intent mainIntent = new Intent(this, Home.class);
                 startActivity(mainIntent);
                 finish();
             }

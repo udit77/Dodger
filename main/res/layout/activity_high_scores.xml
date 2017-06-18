@@ -24,10 +24,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="HIGH SCORES"
+                android:text="High Scores"
                 android:gravity="center"
-                android:textSize="48sp"
-                android:textColor="#fff"
+                android:textSize="32sp"
+                android:textColor="#71D57D"
                 />
 
         </LinearLayout>

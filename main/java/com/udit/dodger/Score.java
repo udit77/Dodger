@@ -3,32 +3,22 @@ package com.udit.dodger;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
-public class scores extends Activity {
+public class Score extends Activity {
 
     private ListView mainListView;
     MyAdapter myAdapter;
@@ -36,10 +26,13 @@ public class scores extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scores);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.activity_high_scores);
         mainListView = (ListView) findViewById(R.id.mainListView);
 
-        ArrayList<HighScore> scoreArrayList = new ArrayList<HighScore>();
+        ArrayList<HighScores> scoreArrayList = new ArrayList<HighScores>();
         scoreArrayList = (new SharedPreference()).getScores(getApplicationContext());
 
         Log.d("************", "" + scoreArrayList);
@@ -50,9 +43,9 @@ public class scores extends Activity {
     public class MyAdapter extends BaseAdapter {
 
         private Context context;
-        private ArrayList<HighScore> arrayList;
+        private ArrayList<HighScores> arrayList;
 
-        public MyAdapter(Context context, ArrayList<HighScore> arrayList) {
+        public MyAdapter(Context context, ArrayList<HighScores> arrayList) {
             this.context = context;
             this.arrayList = arrayList;
         }
@@ -78,7 +71,7 @@ public class scores extends Activity {
             LayoutInflater mInflater = (LayoutInflater)
                     context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
             if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.score_row, null);
+                convertView = mInflater.inflate(R.layout.content_high_scores, null);
                 holder.scoreView = (TextView) convertView.findViewById(R.id.scoreTextView);
                 holder.dateView = (TextView) convertView.findViewById(R.id.dateTextView);
                 holder.serialNumView = (TextView) convertView.findViewById(R.id.serialNumView);
@@ -104,7 +97,7 @@ public class scores extends Activity {
 
     @Override
     public void onBackPressed() {
-        Intent mainIntent = new Intent(this, Main2Activity.class);
+        Intent mainIntent = new Intent(this, Home.class);
         startActivity(mainIntent);
         finish();
     }

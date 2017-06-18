@@ -4,15 +4,15 @@ package com.udit.dodger;
  * Created by User on 16-Jun-17.
  */
 
-public class HighScore {
+public class HighScores {
     long time;
     int score;
 
-    public HighScore(){
+    public HighScores(){
 
     }
 
-    public HighScore(long time, int score) {
+    public HighScores(long time, int score) {
         this.time = time;
         this.score = score;
     }

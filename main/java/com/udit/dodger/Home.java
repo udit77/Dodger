@@ -2,15 +2,7 @@ package com.udit.dodger;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -19,7 +11,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class Main2Activity extends Activity {
+public class Home extends Activity {
 
     boolean backButtonPressed = false;
     long backPressedTime = 0;
@@ -29,13 +21,14 @@ public class Main2Activity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_main2);
+        setContentView(R.layout.activity_home);
         ImageView iv_background = (ImageView) findViewById(R.id.background);
         iv_background.setImageResource(R.drawable.image2);
 
 
         Button play = (Button)findViewById(R.id.play);
         Button score = (Button)findViewById(R.id.score);
+        Button tutorial = (Button)findViewById(R.id.tutorial);
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -49,19 +42,33 @@ public class Main2Activity extends Activity {
                 showScores();
             }
         });
+
+        tutorial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTutorial();
+            }
+        });
     }
 
     public void startGame(){
-        Intent intent = new Intent(this,MainActivity.class);
+        Intent intent = new Intent(this,Game.class);
         startActivity(intent);
         finish();
     }
 
     public void showScores() {
-        Intent intent = new Intent(this,scores.class);
+        Intent intent = new Intent(this,Score.class);
         startActivity(intent);
         finish();
     }
+
+    public void showTutorial() {
+        Intent intent = new Intent(this,Tutorial.class);
+        startActivity(intent);
+        finish();
+    }
+
 
 
     @Override

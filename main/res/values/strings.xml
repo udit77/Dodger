@@ -3,4 +3,6 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="title_activity_scores">scores</string>
+    <string name="title_activity_tutorial">Tutorial</string>
+    <string name="title_activity_dodger_splash">DodgerSplash</string>
 </resources>

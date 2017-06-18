@@ -27,7 +27,7 @@
                 android:layout_height="40dip"
                 android:text="Play"
                 android:background="@android:color/white"
-                android:textColor="@android:color/holo_red_dark"/>
+                android:textColor="#71D57D"/>
 
         </LinearLayout>
 
@@ -43,7 +43,7 @@
                 android:layout_height="40dip"
                 android:text="High Score"
                 android:background="@android:color/white"
-                android:textColor="@android:color/holo_red_dark"/>
+                android:textColor="#71D57D"/>
         </LinearLayout>
 
         <LinearLayout
@@ -57,7 +57,7 @@
                 android:layout_height="40dip"
                 android:text="Tutorial"
                 android:background="@android:color/white"
-                android:textColor="@android:color/holo_red_dark"/>
+                android:textColor="#71D57D"/>
         </LinearLayout>
 
     </LinearLayout>
