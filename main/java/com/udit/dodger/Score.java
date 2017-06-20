@@ -52,6 +52,8 @@ public class Score extends Activity {
 
         @Override
         public int getCount() {
+            if(arrayList == null)
+                return 0;
             return arrayList.size();
         }
 

@@ -27,7 +27,7 @@ public class Tutorial extends AppCompatActivity {
         int width = size.x;
 
         ImageView iv_background = (ImageView) findViewById(R.id.background);
-        iv_background.setImageResource(R.drawable.image2);
+        iv_background.setImageResource(R.drawable.background);
 
         TextView tv = (TextView)findViewById(R.id.tutorialView);
         ViewGroup.LayoutParams param = tv.getLayoutParams();
@@ -42,7 +42,7 @@ public class Tutorial extends AppCompatActivity {
                 +"* Do take care of dangerous fire balls."
                 +System.getProperty("line.separator")
                 +System.getProperty("line.separator")
-                +"            Happy Space Dodger :)  - Team@gfers."
+                +"   Happy Space Dodger :)  - Team@gfers."
         );
     }
 

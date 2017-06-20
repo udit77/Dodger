@@ -12,6 +12,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".DodgerSplash"
+            android:label="Space Dodger"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

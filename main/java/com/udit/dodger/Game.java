@@ -30,10 +30,12 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.Random;
 
+import static android.os.SystemClock.sleep;
+
 public class Game extends Activity{
     int bgIndex;
     EnemyShips[] enemyShips;
-    int fireGap;
+    int fireGapX,fireGapY;
     int initialFireIndex;
     MySurfaceView mySurfaceView;
     int warrior_Y;
@@ -60,6 +62,8 @@ public class Game extends Activity{
         Bitmap life;
         Bitmap resume,restart,menu,overlay,gameOver,yourScore;
         int gameOver_x,gameOver_y;
+        int scaledFontSize,scaledScoreSize;
+        int deviceDensity,speed,tapSpeed;
 
         public MySurfaceView(Context context) {
             super(context);
@@ -78,10 +82,39 @@ public class Game extends Activity{
 
             Game.this.warrior_Y = (Game.this.winHeight / 2) - (this.warrior.getHeight() / 2);
             initShips();
-            this.backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.image2);
+            this.backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.background);
             this.backgroundImage = getScaledImage(this.backgroundImage);
             gameOver_x = (winWidth-gameOver.getWidth())/2;
             gameOver_y = 0;
+            scaledFontSize = getResources().getDimensionPixelSize(R.dimen.myFontSize);
+            scaledScoreSize = getResources().getDimensionPixelSize(R.dimen.myHeadingSize);
+            deviceDensity = (int)((getResources().getDisplayMetrics().density)*4);
+            setSpeedAndTap(deviceDensity);
+        }
+
+        public  void setSpeedAndTap(int density){
+            speed = density;
+            if(density == 3){
+                tapSpeed = 15;
+            }
+            else if(density == 4){
+                tapSpeed = 20;
+            }
+            else if(density == 6){
+                tapSpeed = 30;
+            }
+            else if(density == 8){
+                tapSpeed = 40;
+            }
+            else if(density == 12){
+                tapSpeed = 60;
+            }
+            else if(density == 16){
+                tapSpeed = 80;
+            }
+            else{
+                tapSpeed = 30;
+            }
         }
 
         public void onResumeMySurfaceView() {
@@ -132,9 +165,9 @@ public class Game extends Activity{
         public void drawGameOverMenu(){
             if(isGameOver){
                 Paint paint = new Paint();
-                if(gameOver_y<(winHeight-gameOver.getHeight())/2-50) {
-                    gameOver_y=gameOver_y+3;
+                if(gameOver_y<(winHeight/2-gameOver.getHeight())) {
                     this.canvas.drawBitmap(this.gameOver, gameOver_x, gameOver_y , paint);
+                    gameOver_y=gameOver_y+3;
                 }
                 else{
                     this.canvas.drawBitmap(this.gameOver, gameOver_x, gameOver_y , paint);
@@ -144,6 +177,22 @@ public class Game extends Activity{
 
             }else
                 return;
+        }
+
+
+        public void drawYourScore(){
+            int x1 = gameOver_x+(gameOver.getWidth()/4);
+            int y1 = winHeight/2+gameOver.getHeight()/4;
+            String scoreText = "Your Score : "+score;
+
+            Paint paint = new Paint();
+            paint.setColor(Color.parseColor("#71D57D"));
+            paint.setStrokeWidth(2.0f);
+            paint.setTextSize(scaledScoreSize);
+            paint.setColor(Color.parseColor("#71D57D"));
+            paint.setStrokeWidth(2.0f);
+            paint.setTextSize(scaledScoreSize);
+            this.canvas.drawText(scoreText,x1,y1, paint);
         }
 
         public void drawGameEndMenu(){
@@ -164,7 +213,7 @@ public class Game extends Activity{
             Paint paint = new Paint();
             paint.setColor(-1);
             paint.setStrokeWidth(2.0f);
-            paint.setTextSize(25.0f);
+            paint.setTextSize(scaledFontSize);
             paint.setTextAlign(Paint.Align.LEFT);
 
             r.set(left,top,right,bottom);
@@ -183,23 +232,6 @@ public class Game extends Activity{
             this.canvas.drawText(Menu, x2-r.width()/2+restart.getWidth()/2, textY, paint);
         }
 
-        public void drawYourScore(){
-            int initialX = (winWidth-mySurfaceView.overlay.getWidth())/2-mySurfaceView.resume.getWidth()/2;
-            int offset = mySurfaceView.overlay.getWidth()/2;
-            int x1 = initialX+offset/2;
-
-            Paint paint = new Paint();
-            this.canvas.drawBitmap(this.yourScore,x1,(winHeight-gameOver.getHeight())/2 +80, paint);
-
-            int score_x = x1+yourScore.getWidth()+60;
-            int score_y = (winHeight+gameOver.getHeight())/2-40;
-            paint.setColor(Color.parseColor("#71D57D"));
-            paint.setStrokeWidth(2.0f);
-            paint.setTextSize(40.0f);
-            paint.setTextAlign(Paint.Align.RIGHT);
-            this.canvas.drawText("  "+score,score_x,score_y, paint);
-        }
-
         public void drawOverlay(){
             if(!gameThreadPaused)
                 return;
@@ -211,7 +243,7 @@ public class Game extends Activity{
             if(!gameThreadPaused)
                 return;
             int y = (winHeight)-(resume.getHeight()*2);
-            int textY = winHeight-5;
+            int textY = y+resume.getHeight()*3/2;
             int offset = overlay.getWidth()/3;
             int initialX = (winWidth-overlay.getWidth())/2-resume.getWidth()/2;
             int x1 = initialX+offset/2;
@@ -230,7 +262,7 @@ public class Game extends Activity{
             Paint paint = new Paint();
             paint.setColor(-1);
             paint.setStrokeWidth(2.0f);
-            paint.setTextSize(25.0f);
+            paint.setTextSize(scaledFontSize);
             paint.setTextAlign(Paint.Align.LEFT);
 
             r.set(left,top,right,bottom);
@@ -260,7 +292,7 @@ public class Game extends Activity{
             if(isGameOver)
                 return;
             for(int i=0;i<lifeCount;i++){
-                int x = 20+i*30;
+                int x = i*(this.life.getWidth()+5);
                 this.canvas.drawBitmap(this.life,(float)x,25.0f, new Paint());
             }
         }
@@ -271,7 +303,7 @@ public class Game extends Activity{
             Paint paint = new Paint();
             paint.setColor(-1);
             paint.setStrokeWidth(2.0f);
-            paint.setTextSize(25.0f);
+            paint.setTextSize(scaledFontSize);
             paint.setTextAlign(Paint.Align.RIGHT);
             this.canvas.drawText("Score : "+score+" ", (float)winWidth-20, 50.0f, paint);
             count++;
@@ -318,7 +350,7 @@ public class Game extends Activity{
             int i=0;
             while (i < Game.this.enemyShips.length) {
                 if (i != 0) {
-                    Game.this.enemyShips[i].idxX -= 6;
+                    Game.this.enemyShips[i].idxX -= speed;
                     if (Game.this.enemyShips[i].getIdxX()< (Game.this.enemyShips[i].ship.getWidth() * -1) + 5) {
                         int nxtIdx = i == 1 ? 6 : i - 1;
                         if (i == 5) {
@@ -337,7 +369,7 @@ public class Game extends Activity{
                             }
                         }
                     }
-                    if (Game.this.enemyShips[i].getIdxX()> Game.this.winWidth / 3 && Game.this.enemyShips[i].getIdxX() < Game.this.winWidth - 30 && Game.this.enemyShips[i].type == "Enemy_follow") {
+                    if (Game.this.enemyShips[i].getIdxX()> (this.warrior.getWidth()*7/2) && Game.this.enemyShips[i].getIdxX() < Game.this.winWidth - 30 && Game.this.enemyShips[i].type == "Enemy_follow") {
                         Game.this.enemyShips[i].setIdxY(Game.this.warrior_Y);
                     }
                     if (Game.this.enemyShips[i].getIdxX() > Game.this.winWidth / 3 && (i == 4 || i == 5)) {
@@ -429,7 +461,7 @@ public class Game extends Activity{
                 } else {
                     int idxY;
                     if (i == 4) {
-                        idxY = Game.this.getRandom(100, Game.this.winHeight - 100);
+                        idxY = Game.this.getRandom(55, Game.this.winHeight - this.getShipBitmap("fire").getHeight()*2);
                         Game.this.initialFireIndex = idxY;
                         setFireGap();
                     } else {
@@ -467,24 +499,31 @@ public class Game extends Activity{
         }
 
         public void setFireGap() {
-            if (Game.this.initialFireIndex <= Game.this.winHeight / 2) {
-                Game.this.fireGap = Game.this.getRandom(100, Game.this.initialFireIndex);
+            if(Game.this.initialFireIndex < winHeight/2){
+                Game.this.fireGapX = Game.this.getRandom(30, Game.this.initialFireIndex);
+                Game.this.fireGapY = Game.this.getRandom(winHeight/2,winHeight-this.getShipBitmap("fire").getHeight());
             }
-            if (Game.this.initialFireIndex > Game.this.winHeight / 2) {
-                Game.this.fireGap = Game.this.getRandom(100, Game.this.winHeight - Game.this.initialFireIndex);
+            else {
+                Game.this.fireGapX = Game.this.getRandom(30,winHeight/2);
+                Game.this.fireGapY = Game.this.getRandom(Game.this.initialFireIndex,winHeight-this.getShipBitmap("fire").getHeight());
             }
         }
 
         public EnemyShips motionOfFires(EnemyShips enemyShips) {
-            if (enemyShips.getIdxX() <= Game.this.winWidth / 2) {
+            if (enemyShips.getIdxX() <= 3*Game.this.winWidth / 4) {
                 if (enemyShips.type.equals("Enemy_fire_up")) {
-                    if (enemyShips.getIdxY() > Game.this.initialFireIndex - Game.this.fireGap) {
-                        enemyShips.idxY -= 3;
+                    if (enemyShips.getIdxY() > Game.this.fireGapX) {
                         enemyShips.setIdxY(enemyShips.idxY);
+                        enemyShips.idxY -= (tapSpeed/6);
                     }
-                } else if (enemyShips.getIdxY() < Game.this.fireGap + Game.this.initialFireIndex) {
-                    enemyShips.idxY += 3;
-                    enemyShips.setIdxY(enemyShips.idxY);
+                } else if(enemyShips.type.equals("Enemy_fire_down")) {
+
+                    if (enemyShips.getIdxY() < Game.this.fireGapY) {
+                        enemyShips.setIdxY(enemyShips.idxY);
+                        enemyShips.idxY += (tapSpeed)/6;
+                    }
+                }
+                else{
                 }
             }
             return enemyShips;
@@ -495,11 +534,13 @@ public class Game extends Activity{
         this.bgIndex = 0;
         this.warrior_Y = 0;
         this.initialFireIndex = 0;
-        this.fireGap = 0;
+        this.fireGapX = 0;
+        this.fireGapY = 0;
         this.enemyShips = new EnemyShips[7];
     }
 
     public void onCreate(Bundle savedInstanceState) {
+        sleep(2000);
         super.onCreate(savedInstanceState);
         this.mySurfaceView = new MySurfaceView(this);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -564,6 +605,7 @@ public class Game extends Activity{
         display.getSize(size);
         this.winWidth = size.x;
         this.winHeight = size.y;
+        Log.d("winHeight-----",this.winHeight+"");
     }
 
     public void pauseOnTouchEvent(int x,int y){
@@ -645,12 +687,14 @@ public class Game extends Activity{
         }
         else {
             if(!isGameOver) {
+                int x1 = (int)(this.winWidth*0.2f);
+                int x2 = (int)(this.winWidth*0.8f);
                 if (y > (this.winHeight / 2)) {
-                    if (x < 200 && this.warrior_Y < this.winHeight - 100) {
-                        this.warrior_Y += 30;
+                    if (x < x1 && this.warrior_Y < this.winHeight) {
+                        this.warrior_Y += mySurfaceView.tapSpeed;
                     }
-                    if (x > this.winWidth - 200 && this.warrior_Y > 55) {
-                        this.warrior_Y -= 30;
+                    if (x > x2 && this.warrior_Y > 55) {
+                        this.warrior_Y -= mySurfaceView.tapSpeed;
                     }
                 }
             }

@@ -23,7 +23,7 @@ public class Home extends Activity {
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_home);
         ImageView iv_background = (ImageView) findViewById(R.id.background);
-        iv_background.setImageResource(R.drawable.image2);
+        iv_background.setImageResource(R.drawable.background);
 
 
         Button play = (Button)findViewById(R.id.play);

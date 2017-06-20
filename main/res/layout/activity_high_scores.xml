@@ -6,7 +6,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/image2"
+        android:background="@drawable/background"
         android:id="@+id/imageView"/>
 
     <LinearLayout
@@ -26,7 +26,7 @@
                 android:layout_height="match_parent"
                 android:text="High Scores"
                 android:gravity="center"
-                android:textSize="32sp"
+                android:textSize="@dimen/myHeadingSize"
                 android:textColor="#71D57D"
                 />
 

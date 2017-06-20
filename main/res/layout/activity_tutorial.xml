@@ -26,7 +26,7 @@
                 android:layout_height="match_parent"
                 android:text="How To Play"
                 android:gravity="center"
-                android:textSize="32sp"
+                android:textSize="@dimen/myHeadingSize"
                 android:textColor="#71D57D"/>
 
         </LinearLayout>
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:id="@+id/tutorialView"
-                android:textSize="16sp"
+                android:textSize="@dimen/myFontSize"
                 android:padding="16dp"
                 android:layout_gravity="center"
                 android:textColor="#71D57D"/>
